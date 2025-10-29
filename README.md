@@ -3,7 +3,7 @@
 
 ## INTRODUCTION
 
-**This project is based on the [Vision6D 0.5.4 version](https://github.com/InteractiveGL/vision6D/tree/0.5.4) and has added features such as *loading, saving and switching workspace* and *exporting datasets in bop format*. The README file of the original project has been preserved as [ORIGINAL_README.md](https://github.com/Hanagumori-B/VisionBOP/blob/main/ORIGINAL_README.md).**
+**This project is based on the [Vision6D 0.5.4 version](https://github.com/InteractiveGL/vision6D/tree/0.5.4) and has added features such as *loading, saving and switching workspace* and *exporting datasets in bop format*. The README file of the original project has been preserved as [ORIGINAL_README.md](https://github.com/Hanagumori-B/VisionBOP/blob/master/ORIGINAL_README.md).**
 
 This version has made some changes to the workspace logic of the original software, making it incompatible with loading the original workspace.
 
