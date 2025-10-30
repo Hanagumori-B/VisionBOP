@@ -7,6 +7,7 @@ from pyvistaqt import QtInteractor
 from PyQt5.QtCore import Qt
 from ..tools import utils
 
+
 class PnPLabel(QtWidgets.QLabel):
     def __init__(self, pixmap):
         super().__init__()
@@ -66,12 +67,14 @@ class PnPLabel(QtWidgets.QLabel):
     def get_2d_points(self):
         return np.array(self.points).astype('int32')
 
+
 class PnPWindow(QtWidgets.QWidget):
     transformation_matrix_computed = QtCore.pyqtSignal(np.ndarray)
+
     def __init__(self, image_source, mesh_model, camera_intrinsics):
         super().__init__()
 
-        self.setWindowTitle("2D-to-3D Registration Using the PnP Algorithm") 
+        self.setWindowTitle("2D-to-3D Registration Using the PnP Algorithm")
 
         self.mesh_model = mesh_model
         self.camera_intrinsics = camera_intrinsics
@@ -84,7 +87,8 @@ class PnPWindow(QtWidgets.QWidget):
         content_layout = QtWidgets.QHBoxLayout()
 
         # Left panel: 2D image display
-        image = QtGui.QImage(image_source.tobytes(), image_source.shape[1], image_source.shape[0], image_source.shape[2] * image_source.shape[1], QtGui.QImage.Format_RGB888)
+        image = QtGui.QImage(image_source.tobytes(), image_source.shape[1], image_source.shape[0],
+                             image_source.shape[2] * image_source.shape[1], QtGui.QImage.Format_RGB888)
         pixmap = QtGui.QPixmap.fromImage(image)
         image_layout = QtWidgets.QVBoxLayout()
         self.pnp_label = PnPLabel(pixmap)
@@ -120,7 +124,8 @@ class PnPWindow(QtWidgets.QWidget):
     def submit_to_pnp_register(self):
         picked_2d_points = self.pnp_label.get_2d_points()
         if len(picked_2d_points) < 4 or len(picked_2d_points) != len(self.picked_3d_points):
-            utils.display_warning("Please select at least 4 points to perform PnP algorithm and the picked 2D points should match the picked 3D points.")
+            utils.display_warning(
+                "Please select at least 4 points to perform PnP algorithm and the picked 2D points should match the picked 3D points.")
         else:
             success, rotation_vector, translation_vector = cv2.solvePnP(
                 objectPoints=np.array(self.picked_3d_points, dtype=np.float32),
@@ -135,12 +140,15 @@ class PnPWindow(QtWidgets.QWidget):
                 transformation_matrix[:3, 3] = translation_vector.reshape(3)
                 self.transformation_matrix_computed.emit(transformation_matrix)
                 self.close()
-            else: utils.display_warning("Pose estimation failed. Please try to select different non-coplanar points.")
+            else:
+                utils.display_warning("Pose estimation failed. Please try to select different non-coplanar points.")
 
     def point_picking_callback(self, point):
         self.picked_3d_points.append(point)
         label_text = str(len(self.picked_3d_points))
-        label_actor = self.pv_widget.add_point_labels([point], [label_text], show_points=False, font_size=20, text_color="red", shape='rect', shape_opacity=1, pickable=False, reset_camera=False)
+        label_actor = self.pv_widget.add_point_labels([point], [label_text], show_points=False, font_size=20,
+                                                      text_color="red", shape='rect', shape_opacity=1, pickable=False,
+                                                      reset_camera=False)
         self.point_labels.append(label_actor)
 
     def right_click_callback(self, *args):
@@ -151,16 +159,20 @@ class PnPWindow(QtWidgets.QWidget):
 
     def plot_3d_model(self):
         scalars = None
-        if self.mesh_model.color == "nocs": scalars = utils.color_mesh_nocs(self.mesh_model.pv_obj.points)
-        elif self.mesh_model.color == "texture": scalars = np.load(self.mesh_model.texture_path) / 255
-        if scalars is not None: 
-            self.mesh_actor = self.pv_widget.add_mesh(self.mesh_model.pv_obj, scalars=scalars, rgb=True, opacity=1, show_scalar_bar=False)
-        else: 
+        if self.mesh_model.color == "nocs":
+            scalars = utils.color_mesh_nocs(self.mesh_model.pv_obj.points)
+        elif self.mesh_model.color == "texture":
+            scalars = np.load(self.mesh_model.texture_path) / 255
+        if scalars is not None:
+            self.mesh_actor = self.pv_widget.add_mesh(self.mesh_model.pv_obj, scalars=scalars, rgb=True, opacity=1,
+                                                      show_scalar_bar=False)
+        else:
             self.mesh_actor = self.pv_widget.add_mesh(self.mesh_model.pv_obj, opacity=1, show_scalar_bar=False)
             self.mesh_actor.GetMapper().SetScalarVisibility(0)
             self.mesh_actor.GetProperty().SetColor(matplotlib.colors.to_rgb(self.mesh_model.color))
-        
-        self.pv_widget.enable_surface_point_picking(callback=self.point_picking_callback, show_message=False, show_point=False, left_clicking=True, color='red')
+
+        self.pv_widget.enable_surface_point_picking(callback=self.point_picking_callback, show_message=False,
+                                                    show_point=False, left_clicking=True, color='red')
         self.pv_widget.iren.add_observer("RightButtonPressEvent", self.right_click_callback)
         self.pv_widget.reset_camera()
 

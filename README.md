@@ -17,6 +17,10 @@ This version supports annotating images using ply format model files. In this ve
 - Modified the loading and saving contents of the workspace, and added a quick switching function.
 - Added a tool for viewing depth maps.
 
-## License
+## NAMING CONVENTION
+
+In order to export the dataset correctly, workspaces, images, and meshes should follow the following naming conventions:
+
+## LICENSE
 
 GNU General Public License v3.0

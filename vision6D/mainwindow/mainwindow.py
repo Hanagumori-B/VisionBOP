@@ -27,29 +27,12 @@ import cv2 as cv
 
 # Qt5 import
 from PyQt5 import QtWidgets, QtGui
+from PyQt5.QtWidgets import QDialog
 from pyvistaqt import MainWindow
 from PyQt5.QtCore import Qt
 
 # self defined package import
-from ..widgets import CustomQtInteractor
-from ..widgets import SearchBar
-from ..widgets import PnPWindow
-from ..widgets import CustomImageButtonWidget
-from ..widgets import CustomMeshButtonWidget
-from ..widgets import CustomMaskButtonWidget
-from ..widgets import GetPoseDialog
-from ..widgets import GetMaskDialog
-from ..widgets import CalibrationDialog
-from ..widgets import DistanceInputDialog
-from ..widgets import CameraPropsInputDialog
-from ..widgets import MaskWindow
-from ..widgets import LiveWireWindow
-from ..widgets import SamWindow
-from ..widgets import CustomGroupBox
-from ..widgets import CameraControlWidget
-from ..widgets import SaveChangesDialog
-from ..widgets import SquareButton
-from ..widgets import ExportBopDialog
+from ..widgets import *
 
 from ..tools import utils
 from ..tools import exception
@@ -227,8 +210,6 @@ class MyMainWindow(MainWindow):
             self.output_text.append(text)
 
         self.reset_camera()
-
-        # todo: 将up和down键改为切换space
 
     def key_next_workspace(self, up=False):
         if not self.workspaces:
@@ -2024,27 +2005,6 @@ class MyMainWindow(MainWindow):
         bg_actor.user_matrix = transform_matrix
         # --- 背景修改结束 ---
 
-        # 创建一个足够大的平面
-        # 平面的大小和位置需要根据您的相机内参来精确计算，
-        # 一个简化的方法是创建一个比视野稍大的平面。
-        # focal_length = (self.scene.fx + self.scene.fy) / 2
-        # background_distance = 50000
-        # plane_height = (self.scene.canvas_height / focal_length) * background_distance
-        # plane_width = (self.scene.canvas_width / focal_length) * background_distance
-        #
-        # background_plane = pv.Plane(
-        #     center=(0, 0, background_distance),
-        #     direction=(0, 0, -1),  # 面朝相机
-        #     i_size=plane_width,
-        #     j_size=plane_height,
-        #     i_resolution=1,
-        #     j_resolution=1
-        # )
-        #
-        # # 将平面添加到渲染器，并应用纹理
-        # # 我们不需要光照，因为我们只关心它的深度
-        # offscreen_plotter.add_mesh(background_plane, texture=rgb_image_texture, ambient=1.0, diffuse=0.0, specular=0.0)
-
         for item in models_with_id:
             obj_id = item['id']
             mesh_pv = item['model'].pv_obj
@@ -2063,23 +2023,6 @@ class MyMainWindow(MainWindow):
         offscreen_plotter.screenshot(None)
         combined_visib_mask_rgb = offscreen_plotter.screenshot(return_img=True)
         combined_visib_mask_gray = combined_visib_mask_rgb[:, :, 0]
-        # # 获取深度图（Z-buffer），PyVista返回的是[0, 1]范围内的值
-        # depth_raw = offscreen_plotter.get_image_depth()
-        #
-        # # 将深度值转换为毫米单位的16位整型图像
-        # # 注意：这里的转换依赖于相机的近剪裁面和远剪裁面
-        # near, far = offscreen_plotter.camera.clipping_range
-        # far = max(far, background_distance + 1000)
-        # offscreen_plotter.camera.clipping_range = (near, far)
-        #
-        # offscreen_plotter.screenshot(None)
-        # depth_raw = offscreen_plotter.get_image_depth()
-        # if far - near < 1e-6:
-        #     depth_mm = np.zeros_like(depth_raw, dtype=np.uint16)
-        # else:
-        #     # 将深度值从[0, 1]区间 线性化并转换为毫米
-        #     depth_mm = near + depth_raw * (far - near)  # 对于线性深度图，转换更简单
-        #     depth_mm[depth_raw >= 0.999] = 0  # 将背景区域设为0
 
         # 初始化一个空的深度图
         height, width = self.scene.canvas_height, self.scene.canvas_width
@@ -2298,6 +2241,10 @@ class MyMainWindow(MainWindow):
                                ('scene.mesh_container.meshes', "Please load a mesh first!")])
     def export_bop_dataset(self):
         if not self.workspaces:
+            return
+
+        settings = ExportBopDataSettingsDialog(self)
+        if settings.exec_() == QDialog.Rejected:
             return
 
         output_dir = QtWidgets.QFileDialog.getExistingDirectory(None, "Choose a folder to save BOP images.")

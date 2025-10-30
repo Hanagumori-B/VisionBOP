@@ -17,6 +17,7 @@ from .custom_group_box import CustomGroupBox
 from .camera_control_widget import CameraControlWidget
 from .save_change_dialog import SaveChangesDialog
 from .export_bop_dialog import ExportBopDialog
+from .export_bop_dataset_settings_dialog import ExportBopDataSettingsDialog
 
 __all__ = [
     'CalibrationDialog',
@@ -38,5 +39,6 @@ __all__ = [
     'CameraControlWidget',
     'SaveChangesDialog',
     'SquareButton',
-    'ExportBopDialog'
+    'ExportBopDialog',
+    'ExportBopDataSettingsDialog'
 ]

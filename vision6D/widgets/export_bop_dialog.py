@@ -7,6 +7,7 @@ class ExportBopDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Exporting...")
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         self.setModal(True)  # 设置为模态对话框，阻止与其他窗口交互
 
         layout = QtWidgets.QVBoxLayout(self)
