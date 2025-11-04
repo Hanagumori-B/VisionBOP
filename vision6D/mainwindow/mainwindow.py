@@ -1957,7 +1957,7 @@ class MyMainWindow(MainWindow):
 
     @utils.require_attributes([('scene.image_container.reference', "Please load an image first!"),
                                ('scene.mesh_container.meshes', "Please load a mesh first!")])
-    def generate_bop_images(self, save_dirs: dict):
+    def generate_bop_images(self, save_dirs: dict, reduced_scale: list):
         depth_dir = save_dirs['depth_dir']
         mask_dir = save_dirs['mask_dir']
         mask_visib_dir = save_dirs['mask_visib_dir']
@@ -1966,8 +1966,7 @@ class MyMainWindow(MainWindow):
         image_id = int("".join([c for c in list(self.scene.image_container.images.keys())[0] if c.isnumeric()]))
 
         # 生成并保存深度图 (Depth Image)----------------------------------------------------------------------------------
-        offscreen_plotter = pv.Plotter(off_screen=True, window_size=[self.scene.canvas_width,
-                                                                     self.scene.canvas_height])  # 渲染器的窗口大小必须和相机画布大小一致
+        offscreen_plotter = pv.Plotter(off_screen=True, window_size=reduced_scale[1])  # 渲染器的窗口大小必须和相机画布大小一致
         offscreen_plotter.camera = self.plotter.camera.copy()  # 复制主窗口的相机状态，确保虚拟相机和用户看到的完全一样
         offscreen_plotter.render_window.SetMultiSamples(0)
         offscreen_plotter.render_window.SetLineSmoothing(False)
@@ -2025,7 +2024,7 @@ class MyMainWindow(MainWindow):
         combined_visib_mask_gray = combined_visib_mask_rgb[:, :, 0]
 
         # 初始化一个空的深度图
-        height, width = self.scene.canvas_height, self.scene.canvas_width
+        width, height = reduced_scale[1]
         depth_mm = np.zeros((height, width), dtype=np.uint16)
 
         # 获取相机位置
@@ -2055,8 +2054,7 @@ class MyMainWindow(MainWindow):
         offscreen_plotter.close()
 
         # 生成可见部分掩码图 (Mask Visib)----------------------------------------------------------------------------------
-        offscreen_plotter = pv.Plotter(off_screen=True,
-                                       window_size=[self.scene.canvas_width, self.scene.canvas_height], )
+        offscreen_plotter = pv.Plotter(off_screen=True, window_size=reduced_scale[1], )
         offscreen_plotter.camera = self.plotter.camera.copy()
 
         offscreen_plotter.render_window.SetMultiSamples(0)
@@ -2097,8 +2095,7 @@ class MyMainWindow(MainWindow):
 
         #  生成完整掩码图 (Mask)------------------------------------------------------------------------------------------
         for item in models_with_id:
-            offscreen_plotter = pv.Plotter(off_screen=True,
-                                           window_size=[self.scene.canvas_width, self.scene.canvas_height])
+            offscreen_plotter = pv.Plotter(off_screen=True, window_size=reduced_scale[1])
             offscreen_plotter.camera = self.plotter.camera.copy()
             offscreen_plotter.render_window.SetMultiSamples(0)
             offscreen_plotter.render_window.SetLineSmoothing(False)
@@ -2127,17 +2124,18 @@ class MyMainWindow(MainWindow):
             offscreen_plotter.close()
 
         rgb_image = PIL.Image.open(list(self.scene.image_container.images.values())[0].path)
+        rgb_image = rgb_image.resize(reduced_scale[1])
         rgb_image.save(rgb_dir / f"{image_id:06d}.png")
         # self.output_text.append(f"-> {len(models_with_id)} 张完整掩码图 (mask) 已生成。")
 
         # self.output_text.append("-> 所有图像生成完毕！")
 
-    def generate_scene_camera_json_line(self):
+    def generate_scene_camera_json_line(self, reduced_scale: list):
         scene_camera_json_line = {}
         if self.current_workspace_index >= 0:
             scene_camera_json_line[str(self.current_workspace_index)] = {
-                "cam_K": [self.scene.fx, 0.0, self.scene.cx,
-                          0.0, self.scene.fy, self.scene.cy,
+                "cam_K": [self.scene.fx / reduced_scale[2][0], 0.0, self.scene.cx / reduced_scale[2][0],
+                          0.0, self.scene.fy / reduced_scale[2][1], self.scene.cy / reduced_scale[2][1],
                           0.0, 0.0, 1.0],
                 "depth_scale": 1.0
             }
@@ -2247,6 +2245,9 @@ class MyMainWindow(MainWindow):
         if settings.exec_() == QDialog.Rejected:
             return
 
+        chosen_workspaces = settings.get_workspace_list()
+        reduced_scale_list = settings.get_reduced_scale_list()
+
         output_dir = QtWidgets.QFileDialog.getExistingDirectory(None, "Choose a folder to save BOP images.")
         if not output_dir:
             return
@@ -2281,12 +2282,12 @@ class MyMainWindow(MainWindow):
         dialog = ExportBopDialog()
         dialog.show()
         try:
-            for i in range(len(self.workspaces)):
-                dialog.update_progress(i + 1, len(self.workspaces))
-                self.switch_workspace(i)
+            for i in range(len(chosen_workspaces)):
+                dialog.update_progress(i + 1, len(chosen_workspaces))
+                self.switch_workspace(self.workspaces.index(chosen_workspaces[i]))
                 time.sleep(0.5)
-                self.generate_bop_images(save_dirs)
-                scene_camera.update(self.generate_scene_camera_json_line())
+                self.generate_bop_images(save_dirs, reduced_scale_list[i])
+                scene_camera.update(self.generate_scene_camera_json_line(reduced_scale_list[i]))
                 scene_gt.update(self.generate_scene_gt_json_line())
                 scene_gt_info.update(self.generate_scene_gt_info_json_line(save_dirs))
             with open(output_path / 'scene_camera.json', 'w') as f:
