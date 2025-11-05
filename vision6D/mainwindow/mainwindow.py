@@ -1508,8 +1508,15 @@ class MyMainWindow(MainWindow):
 
     def new_workspace_file(self):
         workspace_dir = pathlib.Path(self.workspace_path).parent
+        i = 0
+        for p in sorted([p for p in workspace_dir.iterdir() if p.is_file() and p.suffix == '.json']):
+            try:
+                if int(''.join([n for n in p.name if n.isdigit()])) == i:
+                    i += 1
+            except ValueError: pass
         workspace_path, _ = QtWidgets.QFileDialog().getSaveFileName(
-            QtWidgets.QMainWindow(), "Save File", str(workspace_dir), "Mesh Files (*.json);;All Files (*)")
+            QtWidgets.QMainWindow(), "Save File",
+            str(workspace_dir / f'{i:06d}.json'), "Mesh Files (*.json);;All Files (*)")
         if workspace_path != "":
             with open(workspace_path, 'w') as f:
                 pass

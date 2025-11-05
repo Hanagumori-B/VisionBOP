@@ -5,7 +5,6 @@
 @software: Vision6D
 @file: show_depth_image.py
 @time: 2025-10-30 21:21
-@desc: show a 16bit depth image in colormap
 """
 import json
 
