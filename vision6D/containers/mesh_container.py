@@ -88,7 +88,8 @@ class MeshContainer(metaclass=Singleton):
             )
             mesh.user_matrix = (
                 transformation_matrix if self.reference is None
-                else utils.get_actor_user_matrix(self.meshes[self.reference]).copy()
+                else (utils.get_actor_user_matrix(self.meshes[self.reference]).copy()
+                      + np.array([[0, 0, 0, 5], [0, 0, 0, 5], [0, 0, 0, 0], [0, 0, 0, 0]]))
             )
             mesh_model.actor = mesh
             self._actor_to_index_map[mesh] = current_index
@@ -136,11 +137,13 @@ class MeshContainer(metaclass=Singleton):
                 scalars = np.load(texture_path) / 255  # make sure the color range is from 0 to 1
 
         if scalars is not None:
-            mesh = self.plotter.add_mesh(mesh_model.pv_obj, scalars=scalars, rgb=True, opacity=mesh_model.opacity,
-                                         pickable=True, name=name, show_scalar_bar=False)
+            # mesh = self.plotter.add_mesh(mesh_model.pv_obj, scalars=scalars, rgb=True, opacity=mesh_model.opacity,
+            #                              pickable=True, name=name, show_scalar_bar=False)
+            mesh = mesh_model.actor
         else:
-            mesh = self.plotter.add_mesh(mesh_model.pv_obj, opacity=mesh_model.opacity, pickable=True,
-                                         name=name, show_scalar_bar=False)
+            # mesh = self.plotter.add_mesh(mesh_model.pv_obj, opacity=mesh_model.opacity, pickable=True,
+            #                              name=name, show_scalar_bar=False)
+            mesh = mesh_model.actor
             mesh.GetMapper().SetScalarVisibility(0)
             # if color in self.colors:
             #     mesh.GetProperty().SetColor(matplotlib.colors.to_rgb(color))

@@ -74,7 +74,7 @@ class Scene:
 
     def ctrl_tap_opacity(self):
         if self.mesh_container.reference is not None:
-            for mesh_model in self.mesh_container.meshes.values():
+            for mesh_model in self.mesh_container.meshes:
                 if mesh_model.opacity != 0:
                     mesh_model.opacity_spinbox.setValue(0)
                 else:

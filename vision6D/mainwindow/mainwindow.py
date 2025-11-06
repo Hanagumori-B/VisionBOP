@@ -442,10 +442,11 @@ class MyMainWindow(MainWindow):
         checked_button = self.mesh_button_group_actors.checkedButton()
         if checked_button:
             name = checked_button.text()
-            if name in self.scene.mesh_container.meshes:
+            mesh_id = [m.name for m in self.scene.mesh_container.meshes].index(name)
+            if mesh_id < len(self.scene.mesh_container.meshes):
                 change = 0.05
                 if not up: change *= -1
-                mesh_model = self.scene.mesh_container.meshes[name]
+                mesh_model = self.scene.mesh_container.meshes[mesh_id]
                 current_opacity = mesh_model.opacity_spinbox.value()
                 current_opacity += change
                 current_opacity = np.clip(current_opacity, 0, 1)
@@ -1431,6 +1432,10 @@ class MyMainWindow(MainWindow):
                         pose = mesh['pose']
                         self.add_mesh_file(mesh_paths=[SAVE_ROOT / pathlib.Path(file_path)])
                         self.add_pose_file(pose)
+                        if 'color' in mesh:
+                            color = mesh['color']
+                            self.scene.mesh_color_value_change(int(index), color)
+
                 if 'background' in workspace:
                     settings = workspace["background"]
                     (rx, ry, rz), (tx, ty, tz) = utils.decompose_transform(np.array(settings.get('matrix')))
@@ -1564,7 +1569,8 @@ class MyMainWindow(MainWindow):
             mesh_info = {
                 "mesh_name": mesh_model.name,
                 "file_path": mesh_model.path,
-                "pose": utils.get_actor_user_matrix(mesh_model).tolist()
+                "pose": utils.get_actor_user_matrix(mesh_model).tolist(),
+                "color": mesh_model.color
             }
             workspace_dict["meshes"][index] = mesh_info
         # for mesh_model in self.scene.mesh_container.meshes.values():
@@ -1611,7 +1617,8 @@ class MyMainWindow(MainWindow):
             mesh_info = {
                 "mesh_name": mesh_model.name,
                 "file_path": mesh_model.path,
-                "pose": utils.get_actor_user_matrix(mesh_model).tolist()
+                "pose": utils.get_actor_user_matrix(mesh_model).tolist(),
+                "color": mesh_model.color
             }
             workspace_dict["meshes"][index] = mesh_info
         for image_model in self.scene.image_container.images.values():
