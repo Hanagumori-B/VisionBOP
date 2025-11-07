@@ -127,9 +127,9 @@ class MyMainWindow(MainWindow):
         QtWidgets.QShortcut(QtGui.QKeySequence("u"), self).activated.connect(
             lambda up=False: self.toggle_surface_opacity(up))
 
-        # todo: create the swith button for mesh and ct "ctrl + tap"
         QtWidgets.QShortcut(QtGui.QKeySequence("Tab"), self).activated.connect(self.scene.tap_toggle_opacity)
         QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+Tab"), self).activated.connect(self.scene.ctrl_tap_opacity)
+        QtWidgets.QShortcut(QtGui.QKeySequence("`"), self).activated.connect(self.bg_show_checkbox.toggle)
         QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self).activated.connect(self.clear_plot)
 
         QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+s"), self).activated.connect(self.save_current_workspace)
@@ -1481,7 +1481,7 @@ class MyMainWindow(MainWindow):
             workspace_paths, _ = QtWidgets.QFileDialog().getOpenFileNames(None, "Open file", "", "Files (*.json)")
 
         if workspace_paths:
-            for path in workspace_paths:
+            for i, path in enumerate(workspace_paths):
                 if path not in self.workspaces:
                     self.workspaces.append(path)
                     index = len(self.workspaces) - 1
@@ -1496,9 +1496,8 @@ class MyMainWindow(MainWindow):
                     self.workspace_button_group_actors.addButton(button)
                     self.workspaces_group.widget_layout.addWidget(button)
 
-            # If this is the first workspace being added, load it automatically
-            if self.current_workspace_index == -1 and self.workspaces:
-                self.switch_workspace(0)
+                    if i == 0:
+                        self.switch_workspace(index)
 
     def show_workspace_context_menu(self, pos):
         button = self.sender()
