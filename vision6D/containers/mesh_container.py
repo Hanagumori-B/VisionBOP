@@ -14,6 +14,7 @@ import numpy as np
 import pyvista as pv
 from typing import Dict
 
+import vtk
 from PyQt5 import QtWidgets
 
 from ..tools import utils
@@ -140,6 +141,10 @@ class MeshContainer(metaclass=Singleton):
             # mesh = self.plotter.add_mesh(mesh_model.pv_obj, scalars=scalars, rgb=True, opacity=mesh_model.opacity,
             #                              pickable=True, name=name, show_scalar_bar=False)
             mesh = mesh_model.actor
+            mesh.GetMapper().dataset['colors'] = scalars
+            mesh.GetMapper().dataset.active_scalars_name = 'colors'
+            mesh.GetMapper().SetScalarVisibility(1)
+            mesh.GetMapper().color_mode = 'direct'
         else:
             # mesh = self.plotter.add_mesh(mesh_model.pv_obj, opacity=mesh_model.opacity, pickable=True,
             #                              name=name, show_scalar_bar=False)

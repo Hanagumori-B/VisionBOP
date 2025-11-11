@@ -145,6 +145,14 @@ class Scene:
                 mesh_model.color = color
                 if color != "nocs" and color != "select":
                     mesh_model.color_button.setStyleSheet(f"background-color: {mesh_model.color}")
+                elif color == 'nocs':
+                    gradient_str = """
+                                    background-color: qlineargradient(
+                                        spread:pad, x1:0, y1:0, x2:1, y2:1,
+                                        stop:0 red, stop:0.17 orange, stop:0.33 yellow,
+                                        stop:0.5 green, stop:0.67 blue, stop:0.83 indigo, stop:1 violet);
+                                    """
+                    mesh_model.color_button.setStyleSheet(gradient_str)
             except ValueError:
                 utils.display_warning(f"Cannot set color ({color}) to {index}")
 
