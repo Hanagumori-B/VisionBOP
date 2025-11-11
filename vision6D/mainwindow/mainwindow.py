@@ -33,11 +33,7 @@ from PyQt5.QtCore import Qt
 
 # self defined package import
 from ..widgets import *
-
-from ..tools import utils
-from ..tools import exception
-from ..tools import BopJsonEncoder
-from ..tools import DepthImageWindow
+from ..tools import *
 from ..containers import Scene
 
 from ..path import ICON_PATH, SAVE_ROOT
@@ -578,6 +574,7 @@ class MyMainWindow(MainWindow):
 
         toolsMenu = mainMenu.addMenu('Tools')
         toolsMenu.addAction('Colored Depth Image Viewer', self.colored_viewer)
+        toolsMenu.addAction('Export models_info.json', self.export_models_info)
 
     # ^Panel
     def set_panel_bar(self):
@@ -1832,6 +1829,10 @@ class MyMainWindow(MainWindow):
         viewer = DepthImageWindow(self)
         viewer.show()
 
+    def export_models_info(self):
+        viewer = ExportModelsInfo(self)
+        viewer.show()
+
     @utils.require_attributes([('scene.image_container.reference', "Please load an image first!")])
     def set_distance2camera(self):
         image_model = self.scene.image_container.images[self.scene.image_container.reference]
@@ -1993,9 +1994,8 @@ class MyMainWindow(MainWindow):
         offscreen_plotter.clear()
 
         # 添加背景平面
-        # 加载RGB图像作为纹理
-        rgb_image_model = list(self.scene.image_container.images.values())[0]
-        rgb_image_texture = pv.Texture(rgb_image_model.source_obj)
+        # rgb_image_model = list(self.scene.image_container.images.values())[0]
+        # rgb_image_texture = pv.Texture(rgb_image_model.source_obj)
         # --- 核心修改：使用UI控件的值来创建背景 ---
         # if self.background_group.checkbox.isChecked():
         # 1. 读取UI值
@@ -2024,6 +2024,7 @@ class MyMainWindow(MainWindow):
             actor = offscreen_plotter.add_mesh(
                 mesh_pv,
                 # scalars='obj_id',
+                color='white',
                 cmap="gray",
                 clim=[1, 255],
                 lighting=False,
