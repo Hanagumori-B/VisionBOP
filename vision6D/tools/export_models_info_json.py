@@ -10,7 +10,6 @@
 
 import os
 import pathlib
-import sys
 import json
 import trimesh
 import numpy as np
@@ -18,6 +17,11 @@ import numpy as np
 from scipy.spatial.distance import pdist
 from PyQt5 import QtWidgets, QtCore, QtGui
 from ..path import ICON_PATH
+
+
+class PlyListWidget(QtWidgets.QListWidget):
+    def allItemsText(self):
+        return [self.item(i).text() for i in range(self.count())]
 
 
 class ExportModelsInfo(QtWidgets.QMainWindow):
@@ -33,9 +37,16 @@ class ExportModelsInfo(QtWidgets.QMainWindow):
         main_layout = QtWidgets.QVBoxLayout(self.centralWidget)
         button_layout = QtWidgets.QHBoxLayout()
 
-        self.ply_list = QtWidgets.QListWidget()
+        self.ply_list = PlyListWidget()
         self.ply_list.setFixedSize(620, 400)
+        self.ply_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.ply_list.customContextMenuRequested.connect(self.show_context_menu)
         main_layout.addWidget(self.ply_list)
+
+        self.save_ply_files_by_naming_rule = QtWidgets.QCheckBox(self)
+        self.save_ply_files_by_naming_rule.setText("Save PLY Files by Naming Rule as the Same Time")
+        self.save_ply_files_by_naming_rule.setChecked(True)
+        main_layout.addWidget(self.save_ply_files_by_naming_rule)
 
         self.choose_ply_button = QtWidgets.QPushButton("Choose PLY Files")
         self.choose_ply_button.setFixedSize(120, 35)
@@ -48,17 +59,15 @@ class ExportModelsInfo(QtWidgets.QMainWindow):
         button_layout.addItem(QtWidgets.QSpacerItem(100, 35))
         main_layout.addLayout(button_layout)
 
-        self.choose_ply_button.clicked.connect()
-        self.export_button.clicked.connect()
+        self.choose_ply_button.clicked.connect(self.choose_ply_files)
+        self.export_button.clicked.connect(self.generate_models_info_json)
 
     @staticmethod
     def get_model_info(ply_file_path):
         mesh = trimesh.load(ply_file_path)
-
         vertices = mesh.vertices  # 获取顶点
 
         # 计算直径（顶点之间的最大距离）
-        # 对于顶点数量较多的模型，此计算可能较慢
         if len(vertices) > 1:
             diameter = np.max(pdist(vertices))
         else:
@@ -79,26 +88,44 @@ class ExportModelsInfo(QtWidgets.QMainWindow):
             'size_z': float(sizes[2]),
         }
 
-        return model_info
+        return model_info, mesh
 
-    def generate_models_info_json(self, models_dir, output_file='models_info.json'):
+    def choose_ply_files(self):
+        models_paths, _ = QtWidgets.QFileDialog.getOpenFileNames(self, "Select PLY Files", "", "ply Files (*.ply)")
+        for model_path in models_paths:
+            if model_path not in self.ply_list.allItemsText():
+                self.ply_list.addItem(model_path)
+
+    def generate_models_info_json(self):
+        models_paths = self.ply_list.allItemsText()
+        output_path = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Output Directory")
         models_info = {}
 
         # 遍历目录中的所有.ply文件
-        for filename in sorted(os.listdir(models_dir)):
-            if filename.endswith('.ply'):
-                # 提取对象ID（假设文件名格式为obj_xxxxx.ply）
-                obj_id = str(int(filename.split('_')[1].split('.')[0]))
-
-                file_path = os.path.join(models_dir, filename)
-
-                print(f"正在处理模型: {filename} (ID: {obj_id})")
-
-                # 获取模型信息
-                info = self.get_model_info(file_path)
+        for file_path in sorted(models_paths):
+            if file_path.endswith('.ply'):
+                obj_id = str(int(''.join([d for d in file_path if d.isdigit()])))  # 提取对象ID
+                info, mesh = self.get_model_info(file_path)
                 models_info[obj_id] = info
+                if self.save_ply_files_by_naming_rule.isChecked():
+                    mesh.export(pathlib.Path(output_path) / f"obj_{int(obj_id):06d}.ply")
 
         # 将信息写入json文件
-        output_path = os.path.join(models_dir, output_file)
-        with open(output_path, 'w') as f:
+        output_file = pathlib.Path(output_path) / "models_info.json"
+        with open(output_file, 'w') as f:
             json.dump(models_info, f, indent=4)
+
+        self.close()
+        self.parent().output_text.append(f'Successfully exported {output_file}')
+
+    def show_context_menu(self, pos):
+        # 获取当前鼠标位置对应的项
+        index = self.ply_list.indexAt(pos)
+        if not index.isValid():
+            return
+
+        menu = QtWidgets.QMenu(self)
+        remove_action = QtWidgets.QAction('Remove', self)
+        remove_action.triggered.connect(lambda: self.ply_list.takeItem(index.row()))
+        menu.addAction(remove_action)
+        menu.exec_(self.mapToGlobal(pos))

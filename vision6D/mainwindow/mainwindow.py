@@ -563,14 +563,14 @@ class MyMainWindow(MainWindow):
         exportMenu = mainMenu.addMenu('Export')
         exportMenu.addAction('BOP Dataset', self.export_bop_dataset)
         exportMenu.addSeparator()
+        exportMenu.addAction('Camera Info', self.export_camera_info)
+        exportMenu.addSeparator()
         exportMenu.addAction('Workspace', self.export_workspace)
         exportMenu.addAction('Image', self.export_image)
-        exportMenu.addAction('Mask', self.export_mask)
+        # exportMenu.addAction('Mask', self.export_mask)
         exportMenu.addAction('Pose', self.export_pose)
         exportMenu.addAction('Mesh Render', self.export_mesh_render)
         # exportMenu.addAction('SegMesh Render', self.export_segmesh_render)
-        exportMenu.addSeparator()
-        exportMenu.addAction('Camera Info', self.export_camera_info)
 
         toolsMenu = mainMenu.addMenu('Tools')
         toolsMenu.addAction('Colored Depth Image Viewer', self.colored_viewer)
@@ -1994,11 +1994,7 @@ class MyMainWindow(MainWindow):
         offscreen_plotter.clear()
 
         # 添加背景平面
-        # rgb_image_model = list(self.scene.image_container.images.values())[0]
-        # rgb_image_texture = pv.Texture(rgb_image_model.source_obj)
-        # --- 核心修改：使用UI控件的值来创建背景 ---
-        # if self.background_group.checkbox.isChecked():
-        # 1. 读取UI值
+        # 读取UI值
         rx = self.bg_rx_control.spin_box.value()
         ry = self.bg_ry_control.spin_box.value()
         rz = self.bg_rz_control.spin_box.value()
@@ -2006,13 +2002,13 @@ class MyMainWindow(MainWindow):
         width = self.bg_width_control.spin_box.value()
         height = self.bg_height_control.spin_box.value()
 
-        # 2. 创建变换矩阵和平面
+        # 创建变换矩阵和平面
         transform_matrix = utils.compose_transform(np.array([rx, ry, rz]), np.array([0, 0, distance]))
 
         background_plane_geom = pv.Plane(
             i_size=width, j_size=height, i_resolution=1, j_resolution=1)
 
-        # 3. 将平面添加到离屏渲染器并应用变换
+        # 将平面添加到离屏渲染器并应用变换
         bg_actor = offscreen_plotter.add_mesh(background_plane_geom, color='white', ambient=1.0)
         bg_actor.user_matrix = transform_matrix
         # --- 背景修改结束 ---

@@ -305,7 +305,7 @@ QHeaderView::section
 
 QCheckBox:disabled
 {
-color: #414141;
+    color: #414141;
 }
 
 QDockWidget::title
@@ -343,8 +343,7 @@ QMainWindow::separator
 
 QMainWindow::separator:hover
 {
-
-    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d7801a, stop:0.5 #b56c17 stop:1 #ffa02f);
+    background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d7801a, stop:0.5 #b56c17, stop:1 #ffa02f);
     color: white;
     padding-left: 4px;
     border: 1px solid #6c6c6c;
@@ -449,8 +448,9 @@ QRadioButton::indicator:checked
         fx: 0.5, fy: 0.5,
         radius: 1.0,
         stop: 0.25 #ffaa00,
-        stop: 0.3 #323232
+        stop: 0.30 #323232
     );
+    border: 1px solid #ffaa00;
 }
 
 QCheckBox::indicator{
@@ -459,6 +459,11 @@ QCheckBox::indicator{
     border: 1px solid #b1b1b1;
     width: 9px;
     height: 9px;
+    border-radius: 1px;
+}
+
+QCheckBox::indicator:checked{
+    border: 1px solid #ffaa00;
 }
 
 QRadioButton::indicator
@@ -469,6 +474,13 @@ QRadioButton::indicator
 QRadioButton::indicator:hover, QCheckBox::indicator:hover
 {
     border: 1px solid #ffaa00;
+    background-color: qradialgradient(
+        cx: 0.5, cy: 0.5,
+        fx: 0.5, fy: 0.5,
+        radius: 1.0,
+        stop: 0.25 #b1b1b1,
+        stop: 0.30 #323232
+    );
 }
 
 QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
